@@ -36,6 +36,10 @@ async def on_ready():
     print(f'{bot.user} đã khởi động!')
     check_boss_times.start()
 
+@bot.command()
+async def hello(ctx):
+    await ctx.send("Xin chào từ bot Railway!")
+
 @tasks.loop(minutes=1)
 async def check_boss_times():
     now = datetime.now(pytz.timezone('Asia/Ho_Chi_Minh'))
