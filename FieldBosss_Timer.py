@@ -45,7 +45,7 @@ async def on_ready():
 
 @bot.command()
 async def hello(ctx):
-    await ctx.send("Xin chào từ bot Railway!")
+    await ctx.send("Xin chào, tôi là Bot Của Little Fish!")
 
 @tasks.loop(minutes=1)
 async def check_boss_times():
@@ -67,7 +67,7 @@ async def check_boss_times():
             if now.strftime("%H:%M") == warning_time.strftime("%H:%M"):
                 unique_key = (boss, boss_time.strftime("%Y-%m-%d %H:%M"))
                 if unique_key not in notified_times:
-                    await channel.send(f"⚠️ Boss **{boss}** sẽ xuất hiện lúc {boss_time.strftime('%H:%M')}! Chuẩn bị nào!")
+                    await channel.send(f"⚠️ Field Boss **{boss}** sẽ xuất hiện lúc {boss_time.strftime('%H:%M')}! Chuẩn bị nào!")
                     notified_times.add(unique_key)
 
     # Reset danh sách đã báo mỗi ngày lúc 00:00
