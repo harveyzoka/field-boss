@@ -3,11 +3,18 @@ from discord.ext import tasks, commands
 from datetime import datetime, timedelta
 import pytz
 import os
+import sys
 
 
 # Lấy token và channel ID từ biến môi trường
 TOKEN = os.getenv('DISCORD_BOT_TOKEN')
-CHANNEL_ID = int(os.getenv('DISCORD_CHANNEL_ID'))  # Thay bằng ID kênh Discord
+CHANNEL_ID_STR = os.getenv('DISCORD_CHANNEL_ID')  # Thay bằng ID kênh Discord
+
+if not TOKEN or not CHANNEL_ID_STR:
+    print("❌ Lỗi: Thiếu biến môi trường. Kiểm tra DISCORD_BOT_TOKEN và DISCORD_CHANNEL_ID.")
+    sys.exit(1)
+
+CHANNEL_ID = int(CHANNEL_ID_STR)
 
 intents = discord.Intents.default()
 intents.message_content = True
