@@ -48,10 +48,10 @@ async def check_boss():
             )
             if boss_time < now:
                 boss_time += timedelta(days=1)
-
+            
             warning_time = boss_time - timedelta(minutes=5)
 
-            if now.strftime("%H:%M") == warning_time.strftime("%H:%M"):
+            if abs((now - warning_time).total_seconds()) <= 30:
                 await channel.send(f"⚠️ Field Boss **{boss}** sẽ xuất hiện lúc {boss_time.strftime('%H:%M')}! Chuẩn bị nào!")
                 print(f"Đã gửi cảnh báo cho {boss}")
                 warning_sent = True
