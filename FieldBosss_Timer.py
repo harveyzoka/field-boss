@@ -5,12 +5,12 @@ from datetime import datetime, timedelta
 import pytz
 import asyncio
 
-# Lấy token và channel ID từ biến môi trường
+# Lấy token và kênh từ biến môi trường
 TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 CHANNEL_ID_STR = os.getenv('DISCORD_CHANNEL_ID')
 
 if not TOKEN or not CHANNEL_ID_STR:
-    print("❌ Lỗi: Thiếu biến môi trường.")
+    print("❌ Thiếu biến môi trường.")
     sys.exit(1)
 
 CHANNEL_ID = int(CHANNEL_ID_STR)
@@ -19,55 +19,102 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Client(intents=intents)
 
-# Lịch boss
-boss_schedule = {
-    "Bluemen": ["00:30", "12:30"],
-    "Betalanse": ["02:30", "14:30"],
-    "Cryo": ["04:30", "16:30"],
-    "Sporelex": ["06:30", "18:30"],
-    "Toxspore": ["08:30", "20:30"],
-    "Bristol": ["10:30", "22:30"],
-    "Veilian": ["00:30", "12:30"],
-    "Arque": ["02:30", "14:30"],
-    "Rootrus": ["04:30", "16:30"],
-    "Sapphire Blade": ["06:30", "18:30"],
-    "Coralisk": ["08:30", "20:30"],
-    "Breeze": ["10:30", "22:30"]
+tz = pytz.timezone('Asia/Ho_Chi_Minh')
+
+# 🕒 Danh sách boss với thời gian spawn động
+boss_cycle_schedule = {
+    "Bluemen II": {
+        "start": "2025-05-08 00:30",
+        "cycle_hours": 12
+    },
+    "Betalanse II": {
+        "start": "2025-05-08 02:30",
+        "cycle_hours": 12
+    },
+    "Cryo II": {
+        "start": "2025-05-08 04:30",
+        "cycle_hours": 12
+    },
+    "Sporelex II": {
+        "start": "2025-05-08 06:30",
+        "cycle_hours": 12
+    },
+    "Toxspore II": {
+        "start": "2025-05-08 08:30",
+        "cycle_hours": 12
+    },
+    "Bristol II": {
+        "start": "2025-05-08 10:30",
+        "cycle_hours": 12
+    },
+    "Veilian II": {
+        "start": "2025-05-08 12:30",
+        "cycle_hours": 12
+    },
+    "Arque II": {
+        "start": "2025-05-08 14:30",
+        "cycle_hours": 12
+    },
+    "Rootrus II": {
+        "start": "2025-05-08 16:30",
+        "cycle_hours": 12
+    },
+    "Sapphire Blade II": {
+        "start": "2025-05-08 06:30",
+        "cycle_hours": 12
+    },
+    "Coralisk II": {
+        "start": "2025-05-08 08:30",
+        "cycle_hours": 12
+    },
+    "Breeze II": {
+        "start": "2025-05-08 10:30",
+        "cycle_hours": 12
+    },
+    "Rootrus I": {
+        "start": "2025-05-08 16:40",
+        "cycle_hours": 10
+    }
 }
 
-async def check_boss():
-    tz = pytz.timezone('Asia/Ho_Chi_Minh')
-    now = datetime.now(tz)
-    channel = bot.get_channel(CHANNEL_ID)
+# 🔁 Hàm xử lý boss theo chu kỳ
+async def check_cycle_boss(schedule, now, channel):
     warning_sent = False
 
-    for boss, times in boss_schedule.items():
-        for time_str in times:
-            # Tạo boss_time với múi giờ chuẩn
-            boss_time_obj = datetime.strptime(time_str, "%H:%M").time()
-            today = now.date()
-            boss_datetime = tz.localize(datetime.combine(today, boss_time_obj))
+    for boss, info in schedule.items():
+        try:
+            start_dt = tz.localize(datetime.strptime(info["start"], "%Y-%m-%d %H:%M"))
+            cycle = timedelta(hours=info["cycle_hours"])
 
-            if boss_datetime < now:
-                boss_datetime += timedelta(days=1)
+            while start_dt + cycle <= now:
+                start_dt += cycle
+            next_spawn = start_dt + cycle
+            warning_time = next_spawn - timedelta(minutes=5)
 
-            warning_time = boss_datetime - timedelta(minutes=5)
-
-            # Cho phép lệch ±30 giây
+            # So sánh ±30 giây với thời điểm cảnh báo
             if abs((now - warning_time).total_seconds()) <= 30:
                 await channel.send(
-                    f"⚠️ Field Boss **{boss}** sẽ xuất hiện lúc {boss_datetime.strftime('%H:%M')}! Chuẩn bị nào!"
+                    f"⚠️ Field Boss **{boss}** sẽ xuất hiện lúc {next_spawn.strftime('%H:%M')}! Chuẩn bị nào!"
                 )
-                print(f"Đã gửi cảnh báo cho {boss}")
+                print(f"Đã gửi cảnh báo cho {boss} (xuất hiện lúc {next_spawn.strftime('%H:%M')})")
                 warning_sent = True
+        except Exception as e:
+            print(f"❌ Lỗi với boss {boss}: {e}")
 
-    if not warning_sent:
-        print("✅ Không có boss nào cần cảnh báo lúc này.")
+    return warning_sent
 
+# 🟢 Khi bot online
 @bot.event
 async def on_ready():
-    print(f"🤖 Bot đã khởi động lúc {datetime.now()}")
-    await check_boss()
-    await bot.close()  # Tự thoát để tiết kiệm tài nguyên Railway
+    now = datetime.now(tz)
+    channel = bot.get_channel(CHANNEL_ID)
+    print(f"🤖 Bot đã khởi động lúc {now.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    sent = await check_cycle_boss(boss_cycle_schedule, now, channel)
+
+    if not sent:
+        print("✅ Không có boss nào cần cảnh báo lúc này.")
+
+    await bot.close()
 
 bot.run(TOKEN)
