@@ -74,10 +74,18 @@ boss_cycle_schedule = {
     "Rootrus I": {
         "start": "2025-05-08 16:40",
         "cycle_hours": 10
+    },    "Sapphire Blade I": {
+        "start": "2025-05-08 06:30",
+        "cycle_hours": 12
+    },
+    "Coralisk I": {
+        "start": "2025-05-08 08:30",
+        "cycle_hours": 12
     }
+
 }
 
-# 🔁 Hàm xử lý boss theo chu kỳ
+# 🔁 Hàm xử lý boss theo chu kỳ (chuẩn, không lệch chu kỳ)
 async def check_cycle_boss(schedule, now, channel):
     warning_sent = False
 
@@ -86,18 +94,31 @@ async def check_cycle_boss(schedule, now, channel):
             start_dt = tz.localize(datetime.strptime(info["start"], "%Y-%m-%d %H:%M"))
             cycle = timedelta(hours=info["cycle_hours"])
 
-            while start_dt + cycle <= now:
-                start_dt += cycle
-            next_spawn = start_dt + cycle
+            if now < start_dt:
+                next_spawn = start_dt
+            else:
+                # Tính số chu kỳ đã qua kể từ thời điểm bắt đầu
+                elapsed_cycles = int((now - start_dt).total_seconds() // cycle.total_seconds())
+                spawn_time = start_dt + elapsed_cycles * cycle
+
+                # Nếu cảnh báo của chu kỳ hiện tại đã qua, chuyển sang chu kỳ tiếp theo
+                if spawn_time + timedelta(minutes=5) < now:
+                    spawn_time += cycle
+
+                next_spawn = spawn_time
+
             warning_time = next_spawn - timedelta(minutes=5)
 
-            # So sánh ±60 giây với thời điểm cảnh báo
+            # So sánh trong khoảng ±60 giây quanh cảnh báo
             if abs((now - warning_time).total_seconds()) <= 60:
                 await channel.send(
                     f"⚠️ Field Boss **{boss}** sẽ xuất hiện lúc {next_spawn.strftime('%H:%M')}! Chuẩn bị nào!"
                 )
-                print(f"Đã gửi cảnh báo cho {boss} (xuất hiện lúc {next_spawn.strftime('%H:%M')})")
+                print(f"✅ Đã gửi cảnh báo cho {boss} (xuất hiện lúc {next_spawn.strftime('%H:%M')})")
                 warning_sent = True
+            else:
+                print(f"⏳ {boss} - Giờ spawn tiếp theo: {next_spawn.strftime('%H:%M')}, cảnh báo lúc: {warning_time.strftime('%H:%M')}, hiện tại: {now.strftime('%H:%M:%S')}")
+
         except Exception as e:
             print(f"❌ Lỗi với boss {boss}: {e}")
 
