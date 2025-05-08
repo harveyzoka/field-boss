@@ -91,8 +91,8 @@ async def check_cycle_boss(schedule, now, channel):
             next_spawn = start_dt + cycle
             warning_time = next_spawn - timedelta(minutes=5)
 
-            # So sánh ±30 giây với thời điểm cảnh báo
-            if abs((now - warning_time).total_seconds()) <= 30:
+            # So sánh ±60 giây với thời điểm cảnh báo
+            if abs((now - warning_time).total_seconds()) <= 60:
                 await channel.send(
                     f"⚠️ Field Boss **{boss}** sẽ xuất hiện lúc {next_spawn.strftime('%H:%M')}! Chuẩn bị nào!"
                 )
