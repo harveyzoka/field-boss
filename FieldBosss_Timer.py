@@ -36,23 +36,28 @@ boss_schedule = {
 }
 
 async def check_boss():
-    now = datetime.now(pytz.timezone('Asia/Ho_Chi_Minh'))
+    tz = pytz.timezone('Asia/Ho_Chi_Minh')
+    now = datetime.now(tz)
     channel = bot.get_channel(CHANNEL_ID)
     warning_sent = False
 
     for boss, times in boss_schedule.items():
         for time_str in times:
-            boss_time = datetime.strptime(time_str, "%H:%M").replace(
-                year=now.year, month=now.month, day=now.day,
-                tzinfo=pytz.timezone('Asia/Ho_Chi_Minh')
-            )
-            if boss_time < now:
-                boss_time += timedelta(days=1)
-            
-            warning_time = boss_time - timedelta(minutes=5)
+            # Tạo boss_time với múi giờ chuẩn
+            boss_time_obj = datetime.strptime(time_str, "%H:%M").time()
+            today = now.date()
+            boss_datetime = tz.localize(datetime.combine(today, boss_time_obj))
 
+            if boss_datetime < now:
+                boss_datetime += timedelta(days=1)
+
+            warning_time = boss_datetime - timedelta(minutes=5)
+
+            # Cho phép lệch ±30 giây
             if abs((now - warning_time).total_seconds()) <= 30:
-                await channel.send(f"⚠️ Field Boss **{boss}** sẽ xuất hiện lúc {boss_time.strftime('%H:%M')}! Chuẩn bị nào!")
+                await channel.send(
+                    f"⚠️ Field Boss **{boss}** sẽ xuất hiện lúc {boss_datetime.strftime('%H:%M')}! Chuẩn bị nào!"
+                )
                 print(f"Đã gửi cảnh báo cho {boss}")
                 warning_sent = True
 
