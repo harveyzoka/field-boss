@@ -36,7 +36,7 @@ boss_cycle_schedule = {
     "Coralisk II": {"start": "2025-05-08 08:30", "cycle_hours": 12},
     "Breeze II": {"start": "2025-05-08 10:30", "cycle_hours": 12},
     "Rootrus I": {"start": "2025-05-08 16:40", "cycle_hours": 10},
-    "Sapphire Blade I": {"start": "2025-05-10 09:45", "cycle_hours": 12},
+    "Sapphire Blade I": {"start": "2025-05-11 5:45", "cycle_hours": 10},
     "Coralisk I": {"start": "2025-05-10 14:50", "cycle_hours": 12},
 
     # RAID Boss (gộp AM + PM, chu kỳ 12h)
