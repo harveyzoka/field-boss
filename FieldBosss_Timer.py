@@ -38,6 +38,7 @@ boss_cycle_schedule = {
     "Rootrus I": {"start": "2025-05-08 16:40", "cycle_hours": 10},
     "Sapphire Blade I": {"start": "2025-05-11 5:45", "cycle_hours": 10},
     "Coralisk I": {"start": "2025-05-10 14:50", "cycle_hours": 12},
+    "Betalanse I": {"start": "2025-05-21 17:05", "cycle_hours": 2},
 
     # RAID Boss (gộp AM + PM, chu kỳ 12h)
     "Pierror Raid": {"start": "2025-05-08 07:00", "cycle_hours": 12, "type": "raid"},
