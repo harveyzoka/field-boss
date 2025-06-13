@@ -6,7 +6,6 @@ import pytz
 
 # Lấy webhook URL từ biến môi trường
 WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')
-print(WEBHOOK_URL)
 
 if not WEBHOOK_URL:
     print("❌ Thiếu DISCORD_WEBHOOK_URL trong biến môi trường.")
