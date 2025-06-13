@@ -14,23 +14,8 @@ if not WEBHOOK_URL:
 
 tz = pytz.timezone('Asia/Ho_Chi_Minh')
 
-# 🕒 Danh sách boss (field + raid)
+# 🕒 Danh sách boss (field + raid), đã được sắp xếp theo I rồi II, và theo cycle_hours tăng dần
 boss_cycle_schedule = {
-    "Bluemen II": {"start": "2025-05-08 00:30", "cycle_hours": 12},
-    "Betalanse II": {"start": "2025-05-08 02:30", "cycle_hours": 12},
-    "Cryo II": {"start": "2025-05-08 04:30", "cycle_hours": 12},
-    "Sporelex II": {"start": "2025-05-08 06:30", "cycle_hours": 12},
-    "Toxspore II": {"start": "2025-05-08 08:30", "cycle_hours": 12},
-    "Bristol II": {"start": "2025-05-08 10:30", "cycle_hours": 12},
-    "Veilian II": {"start": "2025-05-08 12:30", "cycle_hours": 12},
-    "Arque II": {"start": "2025-05-08 14:30", "cycle_hours": 12},
-    "Rootrus II": {"start": "2025-05-08 16:30", "cycle_hours": 12},
-    "Sapphire Blade II": {"start": "2025-05-08 06:30", "cycle_hours": 12},
-    "Coralisk II": {"start": "2025-05-08 08:30", "cycle_hours": 12},
-    "Breeze II": {"start": "2025-05-08 10:30", "cycle_hours": 12},
-    "Rootrus I": {"start": "2025-05-08 16:40", "cycle_hours": 10},
-    "Sapphire Blade I": {"start": "2025-05-11 5:45", "cycle_hours": 10},
-    "Coralisk I": {"start": "2025-05-10 14:50", "cycle_hours": 12},
     "Betalanse I": {"start": "2025-05-21 17:05", "cycle_hours": 2},
     "Blumen I": {"start": "2025-06-13 12:00", "cycle_hours": 2},
     "Cryo I": {"start": "2025-06-13 14:10", "cycle_hours": 4},
@@ -39,7 +24,22 @@ boss_cycle_schedule = {
     "Bristol I": {"start": "2025-06-13 15:25", "cycle_hours": 6},
     "Veilian I": {"start": "2025-06-14 6:30", "cycle_hours": 8},
     "Arque I": {"start": "2025-06-13 15:35", "cycle_hours": 8},
+    "Rootrus I": {"start": "2025-05-08 16:40", "cycle_hours": 10},
+    "Sapphire Blade I": {"start": "2025-05-11 5:45", "cycle_hours": 10},
+    "Coralisk I": {"start": "2025-05-10 14:50", "cycle_hours": 12},
     "Breeze I": {"start": "2025-06-13 15:55", "cycle_hours": 12},
+    "Bluemen II": {"start": "2025-05-08 00:30", "cycle_hours": 12},
+    "Betalanse II": {"start": "2025-05-08 02:30", "cycle_hours": 12},
+    "Cryo II": {"start": "2025-05-08 04:30", "cycle_hours": 12},
+    "Sporelex II": {"start": "2025-05-08 06:30", "cycle_hours": 12},
+    "Sapphire Blade II": {"start": "2025-05-08 06:30", "cycle_hours": 12},
+    "Toxspore II": {"start": "2025-05-08 08:30", "cycle_hours": 12},
+    "Coralisk II": {"start": "2025-05-08 08:30", "cycle_hours": 12},
+    "Bristol II": {"start": "2025-05-08 10:30", "cycle_hours": 12},
+    "Breeze II": {"start": "2025-05-08 10:30", "cycle_hours": 12},
+    "Veilian II": {"start": "2025-05-08 12:30", "cycle_hours": 12},
+    "Arque II": {"start": "2025-05-08 14:30", "cycle_hours": 12},
+    "Rootrus II": {"start": "2025-05-08 16:30", "cycle_hours": 12},
     "Pierror Raid": {"start": "2025-05-08 07:00", "cycle_hours": 12, "type": "raid"},
 }
 
@@ -54,7 +54,7 @@ def send_alert(boss, spawn_time, prefix):
 
 def check_cycle_boss(schedule, now):
     warning_sent = False
-    closest_boss = None
+    closest_bosses = []
     min_diff = float('inf')
 
     for boss, info in schedule.items():
@@ -78,14 +78,17 @@ def check_cycle_boss(schedule, now):
                 diff = abs((now - warning_time).total_seconds())
                 if diff < min_diff:
                     min_diff = diff
-                    closest_boss = (boss, spawn_time, warning_time, prefix)
+                    closest_bosses = [(boss, spawn_time, warning_time, prefix)]
+                elif diff == min_diff:
+                    closest_bosses.append((boss, spawn_time, warning_time, prefix))
 
         except Exception as e:
             print(f"❌ Lỗi với boss {boss}: {e}")
 
-    if not warning_sent and closest_boss:
-        boss, spawn_time, warning_time, prefix = closest_boss
-        print(f"ℹ️ {prefix} gần nhất: {boss} → spawn lúc {spawn_time.strftime('%H:%M')}, cảnh báo lúc: {warning_time.strftime('%H:%M')}")
+    if not warning_sent and closest_bosses:
+        print("ℹ️ Các boss gần nhất:")
+        for boss, spawn_time, warning_time, prefix in closest_bosses:
+            print(f"➡️ {prefix} {boss} → spawn lúc {spawn_time.strftime('%H:%M')}, cảnh báo lúc: {warning_time.strftime('%H:%M')}")
 
 if __name__ == "__main__":
     now = datetime.now(tz)
