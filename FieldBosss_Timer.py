@@ -73,7 +73,7 @@ async def check_cycle_boss(schedule, now, channel):
 
             warning_time = spawn_time - timedelta(minutes=5)
 
-            if abs((now - warning_time).total_seconds()) <= 60:
+            if abs((now - warning_time).total_seconds()) <= 80:
                 await channel.send(
                     f"⚠️ Boss **{prefix}** {boss} sẽ xuất hiện lúc {spawn_time.strftime('%H:%M')}! Chuẩn bị nào!"
                 )
