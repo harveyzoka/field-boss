@@ -39,6 +39,14 @@ boss_cycle_schedule = {
     "Sapphire Blade I": {"start": "2025-05-11 5:45", "cycle_hours": 10},
     "Coralisk I": {"start": "2025-05-10 14:50", "cycle_hours": 12},
     "Betalanse I": {"start": "2025-05-21 17:05", "cycle_hours": 2},
+    "Blumen I": {"start": "2025-06-13 12:00", "cycle_hours": 2},
+    "Cryo I": {"start": "2025-06-13 14:10", "cycle_hours": 4},
+    "Sporelex I": {"start": "2025-06-13 11:15", "cycle_hours": 4},
+    "Toxspore I": {"start": "2025-06-13 14:20", "cycle_hours": 6},
+    "Bristol I": {"start": "2025-06-13 15:25", "cycle_hours": 6},
+    "Veilian I": {"start": "2025-06-13 13:30", "cycle_hours": 8},
+    "Arque I": {"start": "2025-06-13 15:35", "cycle_hours": 8},
+    "Breeze I": {"start": "2025-06-13 15:55", "cycle_hours": 12},
 
     # RAID Boss (gộp AM + PM, chu kỳ 12h)
     "Pierror Raid": {"start": "2025-05-08 07:00", "cycle_hours": 12, "type": "raid"},
