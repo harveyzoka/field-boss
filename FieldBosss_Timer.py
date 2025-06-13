@@ -1,28 +1,20 @@
-import discord
 import os
 import sys
+import requests
 from datetime import datetime, timedelta
 import pytz
 
-# Lấy token và channel từ biến môi trường
-TOKEN = os.getenv('DISCORD_BOT_TOKEN')
-CHANNEL_ID_STR = os.getenv('DISCORD_CHANNEL_ID')
+# Lấy webhook URL từ biến môi trường
+WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')
 
-if not TOKEN or not CHANNEL_ID_STR:
-    print("❌ Thiếu biến môi trường.")
+if not WEBHOOK_URL:
+    print("❌ Thiếu DISCORD_WEBHOOK_URL trong biến môi trường.")
     sys.exit(1)
-
-CHANNEL_ID = int(CHANNEL_ID_STR)
-
-intents = discord.Intents.default()
-intents.message_content = True
-bot = discord.Client(intents=intents)
 
 tz = pytz.timezone('Asia/Ho_Chi_Minh')
 
 # 🕒 Danh sách boss (field + raid)
 boss_cycle_schedule = {
-    # Field Boss
     "Bluemen II": {"start": "2025-05-08 00:30", "cycle_hours": 12},
     "Betalanse II": {"start": "2025-05-08 02:30", "cycle_hours": 12},
     "Cryo II": {"start": "2025-05-08 04:30", "cycle_hours": 12},
@@ -44,16 +36,22 @@ boss_cycle_schedule = {
     "Sporelex I": {"start": "2025-06-13 11:15", "cycle_hours": 4},
     "Toxspore I": {"start": "2025-06-13 14:20", "cycle_hours": 6},
     "Bristol I": {"start": "2025-06-13 15:25", "cycle_hours": 6},
-    "Veilian I": {"start": "2025-06-13 13:30", "cycle_hours": 8},
+    "Veilian I": {"start": "2025-06-14 6:30", "cycle_hours": 8},
     "Arque I": {"start": "2025-06-13 15:35", "cycle_hours": 8},
     "Breeze I": {"start": "2025-06-13 15:55", "cycle_hours": 12},
-
-    # RAID Boss (gộp AM + PM, chu kỳ 12h)
     "Pierror Raid": {"start": "2025-05-08 07:00", "cycle_hours": 12, "type": "raid"},
 }
 
-# 🔁 Xử lý cảnh báo boss (field + raid)
-async def check_cycle_boss(schedule, now, channel):
+def send_alert(boss, spawn_time, prefix):
+    content = f"⚠️ Boss **{prefix}** {boss} sẽ xuất hiện lúc {spawn_time.strftime('%H:%M')}! Chuẩn bị nào!"
+    data = {"content": content}
+    response = requests.post(WEBHOOK_URL, json=data)
+    if response.status_code == 204:
+        print(f"✅ Đã gửi webhook: {content}")
+    else:
+        print(f"❌ Lỗi webhook: {response.status_code} {response.text}")
+
+def check_cycle_boss(schedule, now):
     warning_sent = False
     closest_boss = None
     min_diff = float('inf')
@@ -65,7 +63,6 @@ async def check_cycle_boss(schedule, now, channel):
             boss_type = info.get("type", "field")
             prefix = "RAID" if boss_type == "raid" else "Field Boss"
 
-            # Tính số chu kỳ đã qua
             elapsed_cycles = max(0, int((now - start_dt).total_seconds() // cycle.total_seconds()))
             spawn_time = start_dt + elapsed_cycles * cycle
             if spawn_time + timedelta(minutes=5) < now:
@@ -74,10 +71,7 @@ async def check_cycle_boss(schedule, now, channel):
             warning_time = spawn_time - timedelta(minutes=5)
 
             if abs((now - warning_time).total_seconds()) <= 80:
-                await channel.send(
-                    f"⚠️ Boss **{prefix}** {boss} sẽ xuất hiện lúc {spawn_time.strftime('%H:%M')}! Chuẩn bị nào!"
-                )
-                print(f"✅ Đã gửi cảnh báo cho {prefix} {boss} (xuất hiện lúc {spawn_time.strftime('%H:%M')})")
+                send_alert(boss, spawn_time, prefix)
                 warning_sent = True
             else:
                 diff = abs((now - warning_time).total_seconds())
@@ -92,24 +86,7 @@ async def check_cycle_boss(schedule, now, channel):
         boss, spawn_time, warning_time, prefix = closest_boss
         print(f"ℹ️ {prefix} gần nhất: {boss} → spawn lúc {spawn_time.strftime('%H:%M')}, cảnh báo lúc: {warning_time.strftime('%H:%M')}")
 
-    return warning_sent
-
-@bot.event
-async def on_ready():
+if __name__ == "__main__":
     now = datetime.now(tz)
-    channel = bot.get_channel(CHANNEL_ID)
-    print(f"🤖 Bot đã khởi động lúc {now.strftime('%Y-%m-%d %H:%M:%S')}")
-
-    if channel is None:
-        print("❌ Không tìm thấy channel Discord. Kiểm tra lại CHANNEL_ID hoặc quyền của bot.")
-        await bot.close()
-        return
-
-    sent = await check_cycle_boss(boss_cycle_schedule, now, channel)
-
-    if not sent:
-        print("✅ Không có boss nào cần cảnh báo lúc này.")
-
-    await bot.close()
-
-bot.run(TOKEN)
+    print(f"🤖 Bắt đầu kiểm tra boss lúc {now.strftime('%Y-%m-%d %H:%M:%S')}")
+    check_cycle_boss(boss_cycle_schedule, now)
