@@ -100,6 +100,11 @@ async def on_ready():
     channel = bot.get_channel(CHANNEL_ID)
     print(f"🤖 Bot đã khởi động lúc {now.strftime('%Y-%m-%d %H:%M:%S')}")
 
+    if channel is None:
+        print("❌ Không tìm thấy channel Discord. Kiểm tra lại CHANNEL_ID hoặc quyền của bot.")
+        await bot.close()
+        return
+
     sent = await check_cycle_boss(boss_cycle_schedule, now, channel)
 
     if not sent:
