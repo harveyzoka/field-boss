@@ -53,6 +53,7 @@ def send_alert(boss, spawn_time, prefix):
 
 def check_cycle_boss(schedule, now):
     warning_sent = False
+    already_alerted = set()
     closest_bosses = []
     min_diff = float('inf')
 
@@ -69,25 +70,28 @@ def check_cycle_boss(schedule, now):
                 spawn_time += cycle
 
             warning_time = spawn_time - timedelta(minutes=5)
+            diff_secs = abs((now - warning_time).total_seconds())
 
-            if abs((now - warning_time).total_seconds()) <= 80:
+            if diff_secs <= 80:
                 send_alert(boss, spawn_time, prefix)
                 warning_sent = True
+                already_alerted.add(boss)
             else:
-                diff = abs((now - warning_time).total_seconds())
-                if diff < min_diff:
-                    min_diff = diff
+                if diff_secs < min_diff:
+                    min_diff = diff_secs
                     closest_bosses = [(boss, spawn_time, warning_time, prefix)]
-                elif diff == min_diff:
+                elif diff_secs == min_diff:
                     closest_bosses.append((boss, spawn_time, warning_time, prefix))
 
         except Exception as e:
             print(f"❌ Lỗi với boss {boss}: {e}")
 
     if not warning_sent and closest_bosses:
-        print("ℹ️ Các boss gần nhất:")
-        for boss, spawn_time, warning_time, prefix in closest_bosses:
-            print(f"➡️ {prefix} {boss} → spawn lúc {spawn_time.strftime('%H:%M')}, cảnh báo lúc: {warning_time.strftime('%H:%M')}")
+        filtered = [(b, s, w, p) for b, s, w, p in closest_bosses if b not in already_alerted]
+        if filtered:
+            print("ℹ️ Các boss gần nhất (chưa gửi cảnh báo):")
+            for boss, spawn_time, warning_time, prefix in filtered:
+                print(f"➡️ {prefix} {boss} → spawn lúc {spawn_time.strftime('%H:%M')}, cảnh báo lúc: {warning_time.strftime('%H:%M')}")
 
 if __name__ == "__main__":
     now = datetime.now(tz)
