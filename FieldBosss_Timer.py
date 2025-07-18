@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timedelta
 import pytz
 
-# Lấy webhook URL từ biến môi trường
+# Lấy webhook URL từ biến môi trường as
 WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')
 
 if not WEBHOOK_URL:
